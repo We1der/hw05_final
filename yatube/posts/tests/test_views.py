@@ -213,4 +213,4 @@ class PostPagesTests(TestCase):
             ).exists()
         )
         response = self.authorized_client.get(reverse('posts:follow_index'))
-        self.assertListEqual(response.context.get('page_obj').object_list, [])
+        self.assertQuerysetEqual(response.context.get('page_obj'), [])
