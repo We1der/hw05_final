@@ -27,12 +27,6 @@ def index(request):
 @login_required
 def follow_index(request):
     posts_list = Post.objects.filter(author__following__user=request.user)
-    # кеширование постов подписок (если оставить не проходит тест)
-    # follow_posts_cache = posts_cacher(
-    #     posts_list,
-    #     'follow_posts_cache',
-    #     CACHE_SEC_FOR_POSTS,
-    # )
     page_obj = pagination(request, posts_list)
     context = {
         'page_obj': page_obj,
@@ -43,7 +37,7 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     # Подписаться на автора
-    author = get_object_or_404(User.objects.all(), username=username)
+    author = get_object_or_404(User, username=username)
     if request.user != author:
         Follow.objects.update_or_create(user=request.user, author=author)
     return redirect('posts:profile', author)
@@ -52,7 +46,7 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     # Дизлайк, отписка
-    author = get_object_or_404(User.objects.all(), username=username)
+    author = get_object_or_404(User, username=username)
     follow = Follow.objects.filter(user=request.user, author=author)
     follow.delete()
     return redirect('posts:profile', author)
@@ -73,12 +67,15 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts_list = author.posts.select_related('author')
     page_obj = pagination(request, posts_list)
-    show_follow = False
+    show_follow = True
     following = False
     if request.user == author or request.user.is_anonymous:
-        show_follow = True
+        show_follow = False
     else:
-        following = Follow.objects.filter(user=request.user, author=author)
+        following = Follow.objects.filter(
+            user=request.user,
+            author=author
+        ).exists()
 
     context = {
         'page_obj': page_obj,
@@ -105,9 +102,7 @@ def post_detail(request, post_id):
 @login_required
 def post_create(request):
     form = PostForm(request.POST or None, files=request.FILES or None,)
-    if request.method != 'POST':
-        return render(request, 'posts/create_post.html', {'form': form})
-    if not form.is_valid():
+    if request.method != 'POST' or not form.is_valid():
         return render(request, 'posts/create_post.html', {'form': form})
     post = form.save(commit=False)
     post.author = request.user

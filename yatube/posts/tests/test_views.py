@@ -7,7 +7,6 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-
 from posts.models import Comment, Follow, Group, Post, User
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -197,6 +196,8 @@ class PostPagesTests(TestCase):
                 author=self.user_author,
             ).exists()
         )
+        response = self.authorized_client.get(reverse('posts:index'))
+        # print(type(response.context.get('page_obj')[0]))
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(response.context.get('page_obj')[0], self.post)
 

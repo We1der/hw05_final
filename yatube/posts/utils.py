@@ -16,7 +16,8 @@ def pagination(request: WSGIRequest, posts_list: QuerySet) -> Page:
 
 
 # кеширование постов на странице
-def posts_cacher(posts_list, cache_name: str, cache_timer: int):
+def posts_cacher(posts_list, cache_name: str, cache_timer: int) -> QuerySet:
+    """Функция для кеширования списка постов"""
     cached_posts_list = cache.get(cache_name)
     if not cached_posts_list:
         cached_posts_list = posts_list
